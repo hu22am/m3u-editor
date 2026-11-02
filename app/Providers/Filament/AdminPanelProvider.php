@@ -123,9 +123,9 @@ class AdminPanelProvider extends PanelProvider
             ->userMenuItems([
                 'logout' => fn (Action $action) => $action->hidden(config('auth.auto_login')),
             ])
-            ->brandName('m3u editor')
+            ->brandName('Maintenance')
             ->brandLogo(fn () => view('filament.admin.logo'))
-            ->favicon('/favicon.png')
+            ->favicon('/llicon.png')
             ->font('Plus Jakarta Sans', provider: LocalFontProvider::class)
             ->brandLogoHeight('2.5rem')
             ->databaseNotifications()
