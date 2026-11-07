@@ -14,6 +14,7 @@ use App\Filament\Actions\RegexTesterAction;
 use App\Filament\Clusters\Settings\Pages\ManageCacheSettings;
 use App\Filament\Concerns\HasCopilotSupport;
 use App\Filament\Pages\EasyEditor;
+use App\Filament\Pages\SportsGames;
 use App\Filament\Resources\DynamicGroups\DynamicGroupResource;
 use App\Filament\Resources\MediaServerIntegrations\MediaServerIntegrationResource;
 use App\Filament\Resources\Playlists\Pages\CreatePlaylist;
@@ -423,6 +424,14 @@ class PlaylistResource extends Resource implements CopilotResource
                     ->tooltip(__('Use easy editor to manage groups and channels in one place'))
                     ->icon('heroicon-m-sparkles')
                     ->url(fn ($record): string => EasyEditor::getUrl(['playlistId' => $record->getKey()]))
+                    ->button()->hiddenLabel()->size('sm'),
+                Action::make('sports_games')
+                    ->label(__('Sports'))
+                    ->color('gray')
+                    ->tooltip(__('See today\'s games and which channels in this playlist show them'))
+                    ->icon('heroicon-m-trophy')
+                    ->url(fn ($record): string => SportsGames::getUrl(['playlistId' => $record->getKey()]))
+                    ->visible(fn (): bool => SportsGames::canAccess())
                     ->button()->hiddenLabel()->size('sm'),
                 ViewAction::make()
                     ->button()->hiddenLabel()->size('sm'),
@@ -1725,17 +1734,7 @@ class PlaylistResource extends Resource implements CopilotResource
                                         ->modalSubmitActionLabel(__('Clear'))
                                 )
                                 ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
-                                ->getOptionLabelsUsing(function (array $values, $record): array {
-                                    // Values are IDs, return id => name pairs
-                                    // Need to filter out strings (names) that may exist from previous storage format
-                                    $values = array_filter($values, fn ($value) => is_numeric($value));
-
-                                    return SourceGroup::where('playlist_id', $record?->id)
-                                        ->where('type', 'live')
-                                        ->whereIn('id', $values)
-                                        ->pluck('name', 'id')  // id => name
-                                        ->toArray();
-                                })
+                                ->getOptionLabelsUsing(fn (array $values, $record): array => SourceGroup::displayLabelsForIds($record?->id, 'live', $values))
                                 ->afterStateHydrated(function ($component, $state, $record) {
                                     // Convert names to IDs for display when loading existing data
                                     if (is_array($state) && ! empty($state)) {
@@ -1820,17 +1819,7 @@ class PlaylistResource extends Resource implements CopilotResource
                                         ->modalSubmitActionLabel(__('Clear'))
                                 )
                                 ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
-                                ->getOptionLabelsUsing(function (array $values, $record): array {
-                                    // Values are IDs, return id => name pairs
-                                    // Need to filter out strings (names) that may exist from previous storage format
-                                    $values = array_filter($values, fn ($value) => is_numeric($value));
-
-                                    return SourceGroup::where('playlist_id', $record?->id)
-                                        ->where('type', 'vod')
-                                        ->whereIn('id', $values)
-                                        ->pluck('name', 'id')  // id => name
-                                        ->toArray();
-                                })
+                                ->getOptionLabelsUsing(fn (array $values, $record): array => SourceGroup::displayLabelsForIds($record?->id, 'vod', $values))
                                 ->afterStateHydrated(function ($component, $state, $record) {
                                     // Convert names to IDs for display when loading existing data
                                     if (is_array($state) && ! empty($state)) {
@@ -1914,16 +1903,7 @@ class PlaylistResource extends Resource implements CopilotResource
                                         ->modalSubmitActionLabel(__('Clear'))
                                 )
                                 ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
-                                ->getOptionLabelsUsing(function (array $values, $record): array {
-                                    // Values are IDs, return id => name pairs
-                                    // Need to filter out strings (names) that may exist from previous storage format
-                                    $values = array_filter($values, fn ($value) => is_numeric($value));
-
-                                    return SourceCategory::where('playlist_id', $record?->id)
-                                        ->whereIn('id', $values)
-                                        ->pluck('name', 'id')  // id => name
-                                        ->toArray();
-                                })
+                                ->getOptionLabelsUsing(fn (array $values, $record): array => SourceCategory::displayLabelsForIds($record?->id, $values))
                                 ->afterStateHydrated(function ($component, $state, $record) {
                                     // Convert names to IDs for display when loading existing data
                                     if (is_array($state) && ! empty($state)) {
